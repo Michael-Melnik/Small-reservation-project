@@ -32,6 +32,7 @@ Route::middleware('auth')->group(function () {
     Route::resource('companies', CompanyController::class)->middleware('isAdmin');
     Route::resource('companies.users', CompanyUserController::class)->except('show');
     Route::resource('companies.guides', CompanyGuideController::class)->except('show');
+    Route::resource('companies.activities', \App\Http\Controllers\CompanyActivityController::class)->except('show');
 });
 
 
