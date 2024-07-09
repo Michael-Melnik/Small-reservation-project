@@ -4,10 +4,14 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreGuideRequest;
 use App\Http\Requests\UpdateGuideRequest;
+use App\Mail\RegistrationInvite;
 use App\Models\Company;
 use App\Models\User;
+use App\Models\UserInvitation;
 use Illuminate\Http\Request;
 use App\Enums\Role;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
 
 class CompanyGuideController extends Controller
 {
@@ -39,12 +43,27 @@ class CompanyGuideController extends Controller
     public function store(StoreGuideRequest $request, Company $company)
     {
         $this->authorize('create', $company);
-        $company->users()->create([
-            'name' => $request->input('name'),
+
+        $invitation = UserInvitation::create([
             'email' => $request->input('email'),
-            'password' => bcrypt($request->input('password')),
+            'token' => Str::uuid(),
+            'company_id' => $company->id,
             'role_id' => Role::GUIDE->value,
         ]);
+//        $company->users()->create([
+//            'name' => $request->input('name'),
+//            'email' => $request->input('email'),
+//            'password' => bcrypt($request->input('password')),
+//            'role_id' => Role::COMPANY_OWNER->value,
+//        ]);
+
+        Mail::to($request->input('email'))->send(new RegistrationInvite($invitation));
+//        $company->users()->create([
+//            'name' => $request->input('name'),
+//            'email' => $request->input('email'),
+//            'password' => bcrypt($request->input('password')),
+//            'role_id' => Role::GUIDE->value,
+//        ]);
         return to_route('companies.guides.index', $company);
     }
 

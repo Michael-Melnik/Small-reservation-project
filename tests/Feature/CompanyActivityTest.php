@@ -2,7 +2,8 @@
 
 namespace Tests\Feature;
 
-
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Collection;
 use App\Models\Activity;
 use App\Models\Company;
