@@ -69,6 +69,53 @@ class CompanyActivityTest extends TestCase
         ]);
     }
 
+    public function test_can_upload_image()
+    {
+        Storage::fake('activities');
+
+        $company = Company::factory()->create();
+        $user = User::factory()->companyOwner()->create(['company_id' => $company->id]);
+        $guide = User::factory()->guide()->create();
+
+        $file = UploadedFile::fake()->image('avatar.jpg');
+
+        $this->actingAs($user)->post(route('companies.activities.store', $company), [
+            'name' => 'activity',
+            'description' => 'description',
+            'start_time' => '2023-09-01 10:00',
+            'price' => 9999,
+            'guide_id' => $guide->id,
+            'image' => $file,
+        ]);
+
+        Storage::disk('activities')->assertExists($file->hashName());
+        Storage::disk('activities')->assertExists('thumbs/' . $file->hashName());
+    }
+
+    public function test_cannon_upload_non_image_file()
+    {
+        Storage::fake('activities');
+
+        $company = Company::factory()->create();
+        $user = User::factory()->companyOwner()->create(['company_id' => $company->id]);
+        $guide = User::factory()->guide()->create();
+
+        $file = UploadedFile::fake()->create('document.pdf', 2000, 'application/pdf');
+
+        $response = $this->actingAs($user)->post(route('companies.activities.store', $company), [
+            'name' => 'activity',
+            'description' => 'description',
+            'start_time' => '2023-09-01 10:00',
+            'price' => 9999,
+            'guides' => $guide->id,
+            'image' => $file,
+        ]);
+
+        $response->assertSessionHasErrors(['image']);
+
+        Storage::disk('activities')->assertMissing($file->hashName());
+    }
+
     public function test_guides_are_shown_only_for_specific_company_in_create_form()
     {
         $company = Company::factory()->create();
